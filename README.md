@@ -1,7 +1,8 @@
-# vellum
+<p align="center">
+  <img src="assets/social-preview.png" alt="vellum — fast terminal viewer and directory browser for markdown, spreadsheets, PDF, images, video, and docx" width="820">
+</p>
 
-> Fast terminal viewer **and directory browser** for markdown, spreadsheets,
-> PDF, images, video, and Word docs — with real pixels in the terminal.
+# vellum
 
 [![CI](https://github.com/john-athan/vellum/actions/workflows/ci.yml/badge.svg)](https://github.com/john-athan/vellum/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
