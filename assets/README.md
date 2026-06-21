@@ -37,3 +37,9 @@ v sample.xlsx  # sheet    -> sheet.png
 ./assets/make-gif.sh                       # uses newest Desktop recording
 # or: ./assets/make-gif.sh <in.mov> <out.gif> <fps> <width>
 ```
+
+## Social preview
+
+`make-social.py` composes `social-preview.png` (1280x640) for the GitHub
+social card. Upload it under **Settings → General → Social preview** (UI only;
+no API). Regenerate: `python3 assets/make-social.py`.
