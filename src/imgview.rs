@@ -12,7 +12,7 @@ use std::io;
 use std::time::Duration;
 
 pub fn run(title: String, path: String) -> io::Result<()> {
-    let img = match image::ImageReader::open(&path).and_then(|r| Ok(r.decode())) {
+    let img = match image::ImageReader::open(&path).map(|r| r.decode()) {
         Ok(Ok(img)) => img,
         Ok(Err(e)) => {
             eprintln!("vellum: {path}: {e}");

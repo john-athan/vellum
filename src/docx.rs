@@ -211,13 +211,14 @@ impl Parser {
             return;
         }
         let cell = |row: &Vec<String>, i: usize| {
-            row.get(i).map(|s| s.replace('|', "\\|")).unwrap_or_default()
+            row.get(i)
+                .map(|s| s.replace('|', "\\|"))
+                .unwrap_or_default()
         };
         // header row
         let header: Vec<String> = (0..ncols).map(|i| cell(&rows[0], i)).collect();
         self.out.push_str(&format!("| {} |\n", header.join(" | ")));
-        self.out
-            .push_str(&format!("|{}\n", " --- |".repeat(ncols)));
+        self.out.push_str(&format!("|{}\n", " --- |".repeat(ncols)));
         for row in &rows[1..] {
             let cells: Vec<String> = (0..ncols).map(|i| cell(row, i)).collect();
             self.out.push_str(&format!("| {} |\n", cells.join(" | ")));

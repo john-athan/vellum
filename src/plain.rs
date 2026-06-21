@@ -66,7 +66,7 @@ pub fn supports_sizing() -> bool {
     let _ = stdout.flush();
     let _ = Command::new("stty").arg(&saved).status();
 
-    parse_cpr_col(&buf).map_or(false, |col| col >= 3)
+    parse_cpr_col(&buf).is_some_and(|col| col >= 3)
 }
 
 fn parse_cpr_col(buf: &[u8]) -> Option<u32> {

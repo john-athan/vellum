@@ -4,6 +4,7 @@
 // link picker. Falls back to a one-shot styled dump when piped or with
 // --plain (which can use the kitty text-sizing protocol for big headings).
 
+mod dir;
 mod docx;
 mod imgview;
 mod markdown;
@@ -27,23 +28,31 @@ fn main() -> ExitCode {
         match arg.as_str() {
             "--plain" | "-p" => plain_flag = true,
             "-h" | "--help" => {
-                eprintln!("usage: vellum [--plain] <file.md>");
+                eprintln!("usage: vellum [--plain] [file|dir]");
                 return ExitCode::SUCCESS;
             }
             _ => path = Some(arg),
         }
     }
 
-    let Some(path) = path else {
-        eprintln!("usage: vellum [--plain] <file>");
-        return ExitCode::from(2);
-    };
+    // No argument browses the current directory.
+    let path = path.unwrap_or_else(|| ".".to_string());
 
     let interactive = !plain_flag && io::stdout().is_terminal();
-    let title = Path::new(&path)
-        .file_name()
-        .map(|n| n.to_string_lossy().into_owned())
-        .unwrap_or_else(|| path.clone());
+    let title = file_title(&path);
+
+    // Directories open the file browser (or a plain listing when piped).
+    if Path::new(&path).is_dir() {
+        if interactive {
+            if let Err(e) = dir::run(path) {
+                eprintln!("vellum: {e}");
+                return ExitCode::FAILURE;
+            }
+        } else {
+            print!("{}", dir::dump(&path));
+        }
+        return ExitCode::SUCCESS;
+    }
 
     match kind_of(&path) {
         Format::Image => {
@@ -128,7 +137,45 @@ fn render_markdown(interactive: bool, title: String, src: String) -> ExitCode {
     ExitCode::SUCCESS
 }
 
-enum Format {
+/// File name used as a viewer title.
+fn file_title(path: &str) -> String {
+    Path::new(path)
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_else(|| path.to_string())
+}
+
+/// Open a path in its interactive viewer. Used by the directory browser, which
+/// has already torn down its own terminal; each viewer sets up and restores its
+/// own. Errors are printed but never abort the caller.
+pub fn open_interactive(path: &str) {
+    let title = file_title(path);
+    let r = match kind_of(path) {
+        Format::Image => imgview::run(title, path.to_string()),
+        Format::Sheet => sheet::run(title, path.to_string()),
+        Format::Pdf => pdf::run(title, path.to_string()),
+        Format::Video => video::run(title, path.to_string()),
+        Format::Docx => match docx::to_markdown(path) {
+            Ok(src) => tui::run(title, src),
+            Err(e) => {
+                eprintln!("vellum: {path}: {e}");
+                Ok(())
+            }
+        },
+        Format::Markdown => match fs::read_to_string(path) {
+            Ok(src) => tui::run(title, src),
+            Err(e) => {
+                eprintln!("vellum: {path}: {e}");
+                Ok(())
+            }
+        },
+    };
+    if let Err(e) = r {
+        eprintln!("vellum: {e}");
+    }
+}
+
+pub enum Format {
     Markdown,
     Sheet,
     Image,
@@ -137,7 +184,7 @@ enum Format {
     Docx,
 }
 
-fn kind_of(path: &str) -> Format {
+pub fn kind_of(path: &str) -> Format {
     let ext = Path::new(path)
         .extension()
         .map(|e| e.to_string_lossy().to_lowercase())

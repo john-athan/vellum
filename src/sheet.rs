@@ -412,7 +412,9 @@ impl SheetApp {
 
         let col_end = (self.col_off + vis_cols).min(ncols.max(1));
         let row_end = (self.row_off + body_h).min(nrows);
-        let win = self.book.window(self.row_off, row_end, self.col_off, col_end);
+        let win = self
+            .book
+            .window(self.row_off, row_end, self.col_off, col_end);
 
         let header_style = Style::default()
             .fg(Color::Rgb(125, 211, 252))
@@ -422,7 +424,10 @@ impl SheetApp {
         let mut lines: Vec<Line> = Vec::new();
         let mut hdr = vec![Span::styled(" ".repeat(GUTTER as usize), gutter_style)];
         for c in self.col_off..col_end {
-            hdr.push(Span::styled(center(&col_name(c), COL_W as usize), header_style));
+            hdr.push(Span::styled(
+                center(&col_name(c), COL_W as usize),
+                header_style,
+            ));
         }
         lines.push(Line::from(hdr));
 
@@ -451,7 +456,12 @@ impl SheetApp {
         let reff = format!("{}{}", col_name(self.sel_col), self.sel_row + 1);
         let val = self
             .book
-            .window(self.sel_row, self.sel_row + 1, self.sel_col, self.sel_col + 1)
+            .window(
+                self.sel_row,
+                self.sel_row + 1,
+                self.sel_col,
+                self.sel_col + 1,
+            )
             .into_iter()
             .next()
             .and_then(|r| r.into_iter().next())
@@ -479,13 +489,21 @@ impl SheetApp {
         let find = if self.matches.is_empty() {
             String::new()
         } else {
-            format!("  match {}/{}{}", self.match_idx + 1, self.matches.len(), if done { "" } else { " so far" })
+            format!(
+                "  match {}/{}{}",
+                self.match_idx + 1,
+                self.matches.len(),
+                if done { "" } else { " so far" }
+            )
         };
         let hint = "[/] search [n/N]  [hjkl] move  [Tab] sheet  [q] quit";
         let text = format!(" {reff}: {val}    {load}{find}");
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(0), Constraint::Length(hint.len() as u16 + 1)])
+            .constraints([
+                Constraint::Min(0),
+                Constraint::Length(hint.len() as u16 + 1),
+            ])
             .split(area);
         f.render_widget(
             Paragraph::new(text).style(Style::default().fg(Color::Rgb(252, 211, 77))),

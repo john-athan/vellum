@@ -22,7 +22,10 @@ impl ImagePane {
     pub fn new() -> io::Result<Self> {
         let picker = Picker::from_query_stdio()
             .map_err(|e| io::Error::other(format!("graphics probe failed: {e}")))?;
-        Ok(Self { picker, proto: None })
+        Ok(Self {
+            picker,
+            proto: None,
+        })
     }
 
     pub fn set(&mut self, img: DynamicImage) {

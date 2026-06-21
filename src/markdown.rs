@@ -138,11 +138,21 @@ impl Builder {
     }
 
     fn push_raw(&mut self, toks: Vec<Tok>, kind: Kind) {
-        self.lines.push(LogLine { toks, kind, indent: 0, quote: self.quote_depth });
+        self.lines.push(LogLine {
+            toks,
+            kind,
+            indent: 0,
+            quote: self.quote_depth,
+        });
     }
 
     fn blank(&mut self) {
-        self.lines.push(LogLine { toks: vec![], kind: Kind::Blank, indent: 0, quote: 0 });
+        self.lines.push(LogLine {
+            toks: vec![],
+            kind: Kind::Blank,
+            indent: 0,
+            quote: 0,
+        });
     }
 
     fn run(&mut self, parser: Parser) {
@@ -205,7 +215,8 @@ impl Builder {
                     }
                 }
                 Event::Start(Tag::Item) => {
-                    self.cur.push(Tok::Word("•".into(), Style::default().fg(AMBER)));
+                    self.cur
+                        .push(Tok::Word("•".into(), Style::default().fg(AMBER)));
                     self.cur.push(Tok::Space);
                 }
                 Event::End(TagEnd::Item) => self.finish(Kind::Normal),
@@ -269,7 +280,8 @@ impl Builder {
                 }
 
                 Event::Code(t) => {
-                    self.cur.push(Tok::Word(t.to_string(), Style::default().fg(AMBER)));
+                    self.cur
+                        .push(Tok::Word(t.to_string(), Style::default().fg(AMBER)));
                     if self.link_url.is_some() {
                         self.link_text.push_str(&t);
                     }
@@ -287,10 +299,7 @@ impl Builder {
                     } else if self.in_code {
                         for line in t.lines() {
                             self.push_raw(
-                                vec![Tok::Word(
-                                    format!("    {line}"),
-                                    Style::default().fg(MINT),
-                                )],
+                                vec![Tok::Word(format!("    {line}"), Style::default().fg(MINT))],
                                 Kind::Code,
                             );
                         }
@@ -395,7 +404,11 @@ impl Rendered {
         opts.insert(Options::ENABLE_TABLES);
         let mut b = Builder::default();
         b.run(Parser::new_ext(src, opts));
-        Rendered { lines: b.lines, toc: b.toc, links: b.links }
+        Rendered {
+            lines: b.lines,
+            toc: b.toc,
+            links: b.links,
+        }
     }
 
     /// Wrap logical lines to `width`, returning display lines, their plain-text
@@ -504,7 +517,9 @@ mod tests {
     #[test]
     fn blockquote_gets_gutter() {
         let lines = plain_at("> quoted text here\n", 80);
-        assert!(lines.iter().any(|l| l.starts_with("│ ") && l.contains("quoted")));
+        assert!(lines
+            .iter()
+            .any(|l| l.starts_with("│ ") && l.contains("quoted")));
     }
 
     #[test]
@@ -512,7 +527,10 @@ mod tests {
         let md = "- top\n  - nested\n";
         let lines = plain_at(md, 80);
         let nested = lines.iter().find(|l| l.contains("nested")).unwrap();
-        assert!(nested.starts_with("  "), "nested item should be indented: {nested:?}");
+        assert!(
+            nested.starts_with("  "),
+            "nested item should be indented: {nested:?}"
+        );
     }
 
     #[test]

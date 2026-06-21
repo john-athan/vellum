@@ -161,12 +161,9 @@ fn col_index(r: &[u8]) -> usize {
     n.saturating_sub(1)
 }
 
-fn read_workbook_sheets(
-    zip: &mut zip::ZipArchive<File>,
-) -> Result<Vec<(String, String)>, String> {
+fn read_workbook_sheets(zip: &mut zip::ZipArchive<File>) -> Result<Vec<(String, String)>, String> {
     // workbook.xml: sheet name + r:id (document order)
-    let wb = read_entry(zip, "xl/workbook.xml")
-        .ok_or("missing xl/workbook.xml (not an xlsx?)")?;
+    let wb = read_entry(zip, "xl/workbook.xml").ok_or("missing xl/workbook.xml (not an xlsx?)")?;
     let mut order: Vec<(String, String)> = Vec::new(); // (name, rId)
     let mut rd = Reader::from_str(&wb);
     let mut buf = Vec::new();
@@ -197,9 +194,7 @@ fn read_workbook_sheets(
     let mut buf = Vec::new();
     loop {
         match rd.read_event_into(&mut buf) {
-            Ok(Event::Empty(e)) | Ok(Event::Start(e))
-                if e.name().as_ref() == b"Relationship" =>
-            {
+            Ok(Event::Empty(e)) | Ok(Event::Start(e)) if e.name().as_ref() == b"Relationship" => {
                 let mut id = String::new();
                 let mut target = String::new();
                 for a in e.attributes().flatten() {
@@ -293,8 +288,12 @@ fn stream_sheet(
     stop: &Arc<AtomicBool>,
 ) {
     let Ok(f) = File::open(file) else { return };
-    let Ok(mut zip) = zip::ZipArchive::new(f) else { return };
-    let Ok(entry) = zip.by_name(sheet_path) else { return };
+    let Ok(mut zip) = zip::ZipArchive::new(f) else {
+        return;
+    };
+    let Ok(entry) = zip.by_name(sheet_path) else {
+        return;
+    };
     let mut rd = Reader::from_reader(BufReader::with_capacity(1 << 20, entry));
     let mut buf = Vec::new();
 
@@ -448,7 +447,10 @@ mod tests {
         loop {
             let (rows, ncols, done, capped) = book.dims();
             if done {
-                println!("done: {rows} rows x {ncols} cols, capped={capped}, in {:?}", t.elapsed());
+                println!(
+                    "done: {rows} rows x {ncols} cols, capped={capped}, in {:?}",
+                    t.elapsed()
+                );
                 break;
             }
         }

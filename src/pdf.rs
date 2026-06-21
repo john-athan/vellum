@@ -72,6 +72,11 @@ fn render_page(path: &str, page: usize, target_w: u32) -> Result<image::DynamicI
     Ok(img)
 }
 
+/// First page rastered to an image, for the directory browser's preview pane.
+pub fn poster(path: &str) -> Result<image::DynamicImage, String> {
+    render_page(path, 0, target_px_width().min(900))
+}
+
 struct PdfApp {
     title: String,
     path: String,
@@ -158,7 +163,9 @@ impl PdfApp {
                         dirty = true;
                         match key.code {
                             KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
-                            KeyCode::Char('j') | KeyCode::Right | KeyCode::Char(' ')
+                            KeyCode::Char('j')
+                            | KeyCode::Right
+                            | KeyCode::Char(' ')
                             | KeyCode::PageDown => self.goto(self.page + 1),
                             KeyCode::Char('k') | KeyCode::Left | KeyCode::PageUp => {
                                 self.goto(self.page.saturating_sub(1))

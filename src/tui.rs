@@ -7,9 +7,7 @@ use crossterm::event::{self, Event, KeyCode, KeyEventKind};
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
-use ratatui::widgets::{
-    Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap,
-};
+use ratatui::widgets::{Block, Borders, Clear, List, ListItem, ListState, Paragraph, Wrap};
 use ratatui::{DefaultTerminal, Frame};
 use std::io;
 use std::time::Duration;
@@ -174,7 +172,7 @@ impl App {
                 self.mode = Mode::Doc;
                 false
             }
-            Mode::Doc => return self.key_doc(code),
+            Mode::Doc => self.key_doc(code),
         }
     }
 
@@ -403,7 +401,10 @@ impl App {
         };
         f.render_widget(Clear, bar);
         let hits = self.matches.len();
-        let txt = format!("/{}    ({hits} matches, Enter to jump, Esc to cancel)", self.query);
+        let txt = format!(
+            "/{}    ({hits} matches, Enter to jump, Esc to cancel)",
+            self.query
+        );
         f.render_widget(
             Paragraph::new(txt).style(Style::default().fg(Color::Rgb(252, 211, 77))),
             bar,
@@ -423,7 +424,10 @@ impl App {
                         format!("{:<24}", truncate(&l.text, 24)),
                         Style::default().fg(Color::Rgb(96, 165, 250)),
                     ),
-                    Span::styled(l.url.clone(), Style::default().fg(Color::Rgb(140, 140, 150))),
+                    Span::styled(
+                        l.url.clone(),
+                        Style::default().fg(Color::Rgb(140, 140, 150)),
+                    ),
                 ]))
             })
             .collect();
@@ -451,8 +455,7 @@ fn render_help(f: &mut Frame, area: Rect) {
         Line::from("  ?                this help"),
         Line::from("  q / Esc          quit / close overlay"),
     ]);
-    let p = Paragraph::new(text)
-        .block(Block::default().borders(Borders::ALL).title(" Keys "));
+    let p = Paragraph::new(text).block(Block::default().borders(Borders::ALL).title(" Keys "));
     f.render_widget(p, popup);
 }
 
@@ -481,6 +484,11 @@ fn open_url(url: &str) {
     let _ = std::process::Command::new("open").arg(url).spawn();
     #[cfg(target_os = "linux")]
     let _ = std::process::Command::new("xdg-open").arg(url).spawn();
+    // `rundll32 …FileProtocolHandler` opens the URL in the default handler
+    // without going through `cmd`, which would re-parse the argument and let a
+    // crafted link (e.g. `& calc`) inject a command.
     #[cfg(target_os = "windows")]
-    let _ = std::process::Command::new("cmd").args(["/C", "start", url]).spawn();
+    let _ = std::process::Command::new("rundll32")
+        .args(["url.dll,FileProtocolHandler", url])
+        .spawn();
 }

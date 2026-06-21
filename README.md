@@ -11,6 +11,8 @@ v paper.pdf
 v photo.jpg
 v clip.mp4
 v contract.docx
+v ~/projects        # or a directory — browse and open files in place
+v                   # no argument: browse the current directory
 ```
 
 *Vellum* is the fine parchment that manuscripts were written on — the surface you
@@ -22,6 +24,9 @@ using your terminal's graphics protocol for real pixels where one is available.
 ## Highlights
 
 - **One launcher, many formats** — dispatch by extension, sensible TUI per type.
+- **Directory browser** — point `v` at a folder (or run it bare) for a fast,
+  two-pane navigator: live preview pane, fuzzy filter, and `Enter` opens the
+  selection in its viewer, then drops you back where you were.
 - **Handles huge files** — a 240 MB / 800k-row spreadsheet opens in ~160 ms and
   stays scrollable, because sheets stream in on a background thread instead of
   being loaded whole.
@@ -45,10 +50,11 @@ using your terminal's graphics protocol for real pixels where one is available.
 | Image | `.png` `.jpg` `.jpeg` `.gif` `.webp` `.bmp` `.tiff` `.ico` | [`image`](https://crates.io/crates/image) → graphics |
 | Video | `.mp4` `.mov` `.mkv` `.webm` `.avi` `.m4v` | streaming `ffmpeg` pipe → graphics |
 | Word | `.docx` | unzip + streaming XML → markdown renderer |
+| Directory | any folder | two-pane file browser (list + live preview) |
 
 When stdout is not a TTY (piped), vellum prints a sensible text dump instead of
 launching the TUI (`pdftotext` for PDF, TSV for sheets, metadata for video,
-styled text for markdown/docx).
+styled text for markdown/docx, a plain listing for directories).
 
 ## Install
 
@@ -80,9 +86,17 @@ Without one, vellum falls back to Unicode half-blocks.
 
 ```sh
 v <file>            # interactive viewer (TTY)
+v <dir>  /  v       # directory browser (bare `v` = current dir)
 v --plain <file>    # one-shot styled dump to stdout
 v <file> | less     # piped: text dump
 ```
+
+**Directory** — `j`/`k` `↑`/`↓` move · `d`/`u` half-page · `g`/`G` top/bottom ·
+`Enter`/`l`/`→` open file or enter folder · `h`/`←`/`Backspace` parent ·
+`/` fuzzy filter · `.` toggle dotfiles · `q` quit. The right pane renders a live
+preview of the selection: **images, PDFs (page 1), and video posters as real
+pixels**, **markdown/docx with full typography**, child listing for folders, and
+the head of the file for text/code. Previews are cached as you move.
 
 **Markdown** — `j`/`k` `↑`/`↓` scroll · `d`/`u` half-page · `g`/`G` top/bottom ·
 `t` table of contents · `/` search (`n`/`N` next/prev) · `l` link picker ·
@@ -105,6 +119,7 @@ Visited pages are cached.
 
 ```
 main.rs        dispatch by extension; TTY → TUI, pipe → text dump
+dir.rs         directory browser (list + live preview), opens files via main
 markdown.rs    parse → logical lines + TOC + links; width-aware wrap/layout
 tui.rs         markdown TUI (scroll / TOC / search / links)
 plain.rs       one-shot markdown renderer (kitty text-sizing in pipe mode)
@@ -153,6 +168,10 @@ VELLUM_BIG=/path/to/big.xlsx cargo test --release big_xlsx -- --ignored --nocapt
 - Video has no audio, and terminal frame rate is capped by image transmission.
 - Inside the full-screen TUI, markdown headings use color/bold (not the
   text-sizing protocol — that applies to `--plain` / pipe output).
+- In the directory browser, previews render synchronously as you move the
+  selection, so a PDF or video poster adds a brief raster pause on first visit
+  (cached afterward). Video shows a poster frame, not playback — press `Enter`
+  to open the full player.
 
 ## License
 

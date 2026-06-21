@@ -33,15 +33,25 @@ struct Probe {
 fn ffprobe(path: &str) -> Probe {
     let out = Command::new("ffprobe")
         .args([
-            "-v", "error",
-            "-select_streams", "v:0",
-            "-show_entries", "stream=width,height,r_frame_rate",
-            "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokey=1",
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=width,height,r_frame_rate",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
         ])
         .arg(path)
         .output();
-    let mut p = Probe { w: 1280, h: 720, fps: 30.0, dur: 0.0 };
+    let mut p = Probe {
+        w: 1280,
+        h: 720,
+        fps: 30.0,
+        dur: 0.0,
+    };
     if let Ok(o) = out {
         let s = String::from_utf8_lossy(&o.stdout);
         let mut it = s.lines();
@@ -90,6 +100,18 @@ fn frame_at(path: &str, t: f64, w: u32, h: u32) -> Result<DynamicImage, String> 
         .ok_or_else(|| "bad frame".into())
 }
 
+/// A representative still frame for the directory browser's preview pane.
+pub fn poster(path: &str) -> Result<DynamicImage, String> {
+    let p = ffprobe(path);
+    let (mut w, mut h) = scaled_dims(&p);
+    if w > 900 {
+        h = ((900u64 * h as u64) / w as u64) as u32 & !1;
+        w = 900;
+    }
+    let t = if p.dur > 2.0 { 1.0 } else { 0.0 };
+    frame_at(path, t, w, h.max(2))
+}
+
 fn fmt_time(s: f64) -> String {
     let s = s.max(0.0) as u64;
     format!("{:02}:{:02}", s / 60, s % 60)
@@ -97,11 +119,11 @@ fn fmt_time(s: f64) -> String {
 
 /// Even-rounded display height for a given width, preserving aspect.
 fn scaled_dims(p: &Probe) -> (u32, u32) {
-    let w = (target_w()).min(MAX_PLAY_W).max(160);
+    let w = target_w().clamp(160, MAX_PLAY_W);
     let h = if p.w > 0 {
         ((w as u64 * p.h as u64) / p.w as u64) as u32
     } else {
-        (w * 9 / 16) as u32
+        w * 9 / 16
     };
     (w & !1, h.max(2) & !1)
 }
@@ -170,10 +192,12 @@ pub fn run(title: String, path: String) -> std::io::Result<()> {
 pub fn dump(path: &str) -> String {
     match Command::new("ffprobe")
         .args([
-            "-v", "error",
+            "-v",
+            "error",
             "-show_entries",
             "format=duration,size:stream=codec_type,codec_name,width,height,r_frame_rate",
-            "-of", "default=noprint_wrappers=1",
+            "-of",
+            "default=noprint_wrappers=1",
         ])
         .arg(path)
         .output()
@@ -201,7 +225,7 @@ impl VideoApp {
         self.stop = Arc::new(AtomicBool::new(false));
         self.shared = Arc::new(Mutex::new(Latest::default()));
 
-        let fps = self.probe.fps.min(PLAY_FPS).max(1.0);
+        let fps = self.probe.fps.clamp(1.0, PLAY_FPS);
         let mut child = match Command::new("ffmpeg")
             .args(["-nostdin", "-ss"])
             .arg(format!("{:.3}", self.pos))
@@ -396,4 +420,3 @@ fn decode_loop(
         i += 1;
     }
 }
-
