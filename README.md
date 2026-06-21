@@ -1,5 +1,13 @@
 # vellum
 
+> Fast terminal viewer **and directory browser** for markdown, spreadsheets,
+> PDF, images, video, and Word docs — with real pixels in the terminal.
+
+[![CI](https://github.com/john-athan/vellum/actions/workflows/ci.yml/badge.svg)](https://github.com/john-athan/vellum/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Made with Rust](https://img.shields.io/badge/Rust-stable-orange.svg?logo=rust)](https://www.rust-lang.org)
+[![Built with ratatui](https://img.shields.io/badge/TUI-ratatui-7dd3fc.svg)](https://ratatui.rs)
+
 A fast terminal viewer for the files that are awkward to open in a browser —
 **markdown, spreadsheets, PDF, images, video, and Word documents** — behind one
 tiny command:
@@ -18,6 +26,15 @@ v                   # no argument: browse the current directory
 *Vellum* is the fine parchment that manuscripts were written on — the surface you
 read off of. The tool picks a viewer by file extension and renders it in place,
 using your terminal's graphics protocol for real pixels where one is available.
+
+## Demo
+
+<!-- Capture in a graphics terminal, then commit assets/. See assets/README.md. -->
+![vellum directory browser and viewers](assets/demo.gif)
+
+| Directory browser | Markdown & docs | Video & images |
+| :---: | :---: | :---: |
+| ![browser](assets/browser.png) | ![markdown](assets/markdown.png) | ![video](assets/video.png) |
 
 ---
 
@@ -59,6 +76,13 @@ styled text for markdown/docx, a plain listing for directories).
 ## Install
 
 Requires a recent **Rust** toolchain.
+
+```sh
+# Quickest — installs the `vellum` binary into ~/.cargo/bin:
+cargo install --git https://github.com/john-athan/vellum
+```
+
+Or clone for the short `v` alias and `make` targets:
 
 ```sh
 git clone https://github.com/john-athan/vellum
